@@ -1,0 +1,8 @@
+services:
+  owl-web:
+    build: .
+    image: owl_web
+    ports:
+      - "15000:5000"
+    volumes:
+      - .:/app

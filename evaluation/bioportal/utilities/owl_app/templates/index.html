@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ontology Search</title>
+</head>
+<body>
+    <h1>Ontology Search</h1>
+    <form method="POST">
+        <input type="text" name="query" placeholder="Search..." value="{{ query }}" style="width: 300px; height: 40px;">
+        <input type="submit" value="Search">
+    </form>
+
+    <h2>Query Results</h1>
+    <pre>{{ items }}</pre>
+</body>
+</html>
