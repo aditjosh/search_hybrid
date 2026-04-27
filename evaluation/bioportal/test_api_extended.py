@@ -51,7 +51,6 @@ failed = 0
 
 _THIS_DIR = Path(__file__).parent
 
-
 def section(title: str):
     print(f"\n── {title}")
 
@@ -118,9 +117,7 @@ def load_golden(path: Path = _THIS_DIR / "golden_set.jsonl") -> dict:
 
     return {"single": data, "meta": {"total_single": len(data)}}
 
-
-GOLDEN = load_golden(_THIS_DIR / 'bp_class_search_chiro_mondo_at_least_n_minus_one.jsonl')
-
+GOLDEN = load_golden(_THIS_DIR / "golden_set.jsonl")
 
 def _matches(results: list, acceptable: List[str]) -> Optional[int]:
     """
@@ -212,10 +209,12 @@ def _eval_single(url: str, entry: dict, top_k: int):
         payload["context"] = entry["context"]
     if entry.get("ontologies"):
         payload["ontologies"] = entry["ontologies"]
+
     r = post(url, endpoint, payload)
     if r is None or r.status_code != 200:
         return None, "—"
     results = r.json().get("results", [])
+
     relevant_items = entry["matches"]
     n_matches = _matches(results, relevant_items)
     recall_at_k = n_matches/len(relevant_items) if relevant_items else 0.0
@@ -382,13 +381,13 @@ def test_precision_recall(url: str, top_k: int = 5, max_queries: Optional[int] =
     avg_precision_at_k = round(sum(all_ep_precisions)/len(all_ep_precisions), 3)
     avg_recall_at_k = round(sum(all_ep_recalls)/len(all_ep_recalls), 3)
     print(f"    {'Average precision@k':<12}{avg_precision_at_k:>28}")
-    print(f"    {'5% quantile precision@k':<5}{prec_q_05_at_k:>28}")
-    print(f"    {'50% quantile precision@k':<6}{prec_q_50_at_k:>28}")
-    print(f"    {'95% quantile precision@k':<6}{prec_q_95_at_k:>28}")
+    print(f"    {'5% quantile precision@k':<5}{prec_q_05_at_k:>22}")
+    print(f"    {'50% quantile precision@k':<6}{prec_q_50_at_k:>22}")
+    print(f"    {'95% quantile precision@k':<6}{prec_q_95_at_k:>23}")
     print(f"    {'Average recall@k':<12}{avg_recall_at_k:>31}")
-    print(f"    {'5% quantile recall@k':<5}{recall_q_05_at_k:>28}")
-    print(f"    {'50% quantile recall@k':<6}{recall_q_50_at_k:>28}")
-    print(f"    {'95% quantile recall@k':<6}{recall_q_95_at_k:>28}")
+    print(f"    {'5% quantile recall@k':<5}{recall_q_05_at_k:>25}")
+    print(f"    {'50% quantile recall@k':<6}{recall_q_50_at_k:>26}")
+    print(f"    {'95% quantile recall@k':<6}{recall_q_95_at_k:>26}")
 
     if errors:
         print(f"  {'Errors':<12}{errors:>28}")
@@ -503,6 +502,8 @@ def main():
     parser.add_argument("--stats_file",    default="test_results/query_stats.txt",   help="Save results in the text file")
     parser.add_argument("--plot-format",   default="png", choices=["png", "pdf"])
     parser.add_argument("--plot-dir",      default="test_results", help="Output directory for plots/CSV (default: test_results/)")
+    parser.add_argument("--data-file",     type=str, default=None, help="File containing prepared labeled dataset.")
+    
     args = parser.parse_args()
 
     if args.all:
@@ -530,6 +531,13 @@ def main():
                 indexing_ready = r.json().get("indexing_complete", False)
                 print(f"  [{INFO}] indexing_complete={indexing_ready}")
         print(f"  [{PASS}] Indexing complete")
+
+    global GOLDEN
+    if args.data_file:
+        golden_data_filename = str(args.data_file)
+    else:
+        golden_data_filename = 'bp_class_search_chiro_mondo_at_least_n_minus_one.jsonl'
+    GOLDEN = load_golden(_THIS_DIR / golden_data_filename)
 
     if indexing_ready:
         pr_data = None
